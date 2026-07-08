@@ -1,0 +1,32 @@
+[package]
+name = "heimai-shell"
+version = "0.1.0"
+description = "Heim-AI Windows-Shell: duenner nativer Rahmen um die zentrale Web-UI des Voice-Orchestrators (Phase 2.5)"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+name = "heimai_shell"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+# Desktop-Screenshot (Windows: DXGI/GDI) + PNG-Encode/Verkleinerung
+xcap = "0.4"
+image = "0.25"
+# openWakeWord-Pipeline: ONNX Runtime (laedt die Runtime beim Build) + Audio-Capture
+ort = { version = "=2.0.0-rc.10", features = ["download-binaries"] }
+cpal = "0.15"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true

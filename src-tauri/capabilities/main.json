@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-capability",
+  "description": "IPC-Rechte fuer die gebuendelte Bootstrap-Seite UND die vom eigenen Orchestrator geladene Remote-UI (https://<server>/app). Remote-Zugriff ist eine bewusste Entscheidung: der Server ist Teil des eigenen Heim-Setups (Spez 2.5, 'voll zentral'); die Shell exponiert ausschliesslich ihre eigenen Befehle.",
+  "windows": ["main", "indicator", "popup-*"],
+  "remote": {
+    "urls": ["http://*", "https://*"]
+  },
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:webview:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-unregister-all",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
+  ]
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<!--
+  Bootstrap-Seite der Windows-Shell (Phase 2.5, Architektur "voll zentral").
+
+  Das ist die EINZIGE gebündelte UI der App: Server-Auswahl + Fehlerfälle.
+  Die eigentliche User-UI kommt live vom Orchestrator (https://<server>/app),
+  dieses Fenster navigiert nach erfolgreichem Check dorthin. Ein
+  Server-Deploy aktualisiert damit alle Windows-Clients, ohne dass die
+  Shell neu installiert werden muss - ausser die Server-UI verlangt eine
+  neuere Shell-API (shell_api_version in /app/version.json).
+
+  Bewusst ohne Build-Step (eine Datei), analog zum Admin-Panel des Servers.
+-->
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Heim-AI — Verbinden</title>
+  <style>
+    :root {
+      --bg: #101418; --raised: #1a2027; --input: #232b34; --border: #2e3844;
+      --text: #e8edf2; --muted: #94a3b3; --primary: #4da3ff; --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; height: 100vh; display: grid; place-items: center;
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    .card {
+      width: min(400px, 92vw); background: var(--raised);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 30px; text-align: center;
+    }
+    .logo { font-size: 44px; }
+    h1 { margin: 6px 0 2px; font-size: 22px; }
+    p.sub { color: var(--muted); font-size: 13px; margin: 2px 0 18px; }
+    label { display: block; text-align: left; color: var(--muted); font-size: 13px; margin: 0 0 4px; }
+    input {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--input);
+      color: var(--text); font: inherit;
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+    button {
+      width: 100%; margin-top: 16px; padding: 10px; border-radius: 10px;
+      border: none; background: var(--primary); color: #0b1016;
+      font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; }
+    .status { min-height: 20px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .status.error { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🏠</div>
+    <h1>Heim-AI</h1>
+    <p class="sub">Windows-Client — mit dem Voice-Orchestrator verbinden</p>
+
+    <label for="server">Server-Adresse</label>
+    <input id="server" placeholder="https://ai.preuss.app oder http://192.168.2.105:8000" />
+    <button id="connect">Verbinden</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // Von der Shell erwartete UI-Schnittstelle (muss zu src/commands.rs passen).
+    const SHELL_API_VERSION = 1;
+    const invoke = window.__TAURI__?.core?.invoke ?? (async () => null);
+
+    const serverInput = document.getElementById("server");
+    const connectBtn = document.getElementById("connect");
+    const statusEl = document.getElementById("status");
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.className = "status" + (isError ? " error" : "");
+    }
+
+    async function fetchJson(url, timeoutMs = 4000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function connect(url, interactive) {
+      url = (url || "").trim().replace(/\/+$/, "");
+      if (!url) return;
+      if (!/^https?:\/\//.test(url)) url = "http://" + url;
+      connectBtn.disabled = true;
+
+      try {
+        setStatus("Prüfe Server…");
+        const health = await fetchJson(url + "/v1/health");
+        if (health.status !== "ok") throw new Error("Health-Check fehlgeschlagen");
+
+        setStatus("Prüfe UI-Version…");
+        const version = await fetchJson(url + "/app/version.json");
+        if ((version.shell_api_version ?? 1) > SHELL_API_VERSION) {
+          setStatus(
+            "Die Server-UI benötigt eine neuere Version der Windows-App. " +
+            "Bitte App aktualisieren.", true);
+          return;
+        }
+
+        setStatus("Verbunden — lade Oberfläche…");
+        // Shell speichert die URL und navigiert dieses Fenster auf <url>/app
+        await invoke("set_server_url", { url });
+      } catch (error) {
+        setStatus(
+          interactive
+            ? `Server nicht erreichbar (${error.message ?? error})`
+            : "Gespeicherter Server nicht erreichbar — bitte prüfen.",
+          true);
+      } finally {
+        connectBtn.disabled = false;
+      }
+    }
+
+    connectBtn.addEventListener("click", () => connect(serverInput.value, true));
+    serverInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") connect(serverInput.value, true);
+    });
+
+    // Auto-Connect mit der gespeicherten Adresse (z. B. nach Autostart).
+    (async () => {
+      const saved = await invoke("get_server_url");
+      if (saved) {
+        serverInput.value = saved;
+        await connect(saved, false);
+      }
+    })();
+  </script>
+</body>
+</html>
