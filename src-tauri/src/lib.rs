@@ -20,6 +20,7 @@ mod screenshot;
 mod wakeword;
 mod windows;
 
+use std::collections::HashSet;
 use std::sync::Mutex;
 
 use tauri::menu::{Menu, MenuItem};
@@ -34,6 +35,8 @@ pub struct AppState {
     pub popups: Mutex<popups::PopupStore>,
     /// Laufende Wake-Word-Engine (Stop-Flag), None = aus.
     pub wakeword: Mutex<Option<wakeword::WakeWordHandle>>,
+    /// Origins, die bereits eine Runtime-Capability fuer Remote-IPC haben.
+    pub granted_origins: Mutex<HashSet<String>>,
 }
 
 pub fn run() {
@@ -47,6 +50,7 @@ pub fn run() {
             server_url: Mutex::new(None),
             popups: Mutex::new(popups::PopupStore::default()),
             wakeword: Mutex::new(None),
+            granted_origins: Mutex::new(HashSet::new()),
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_shell_info,
@@ -65,9 +69,14 @@ pub fn run() {
         ])
         .setup(|app| {
             // Gespeicherte Server-URL laden (die Bootstrap-Seite fragt sie
-            // per get_server_url ab und verbindet automatisch).
+            // per get_server_url ab und verbindet automatisch) und die
+            // Remote-IPC-Freigabe fuer diese Origin direkt registrieren.
+            let saved_url = commands::load_server_url(app.handle());
             let state = app.state::<AppState>();
-            *state.server_url.lock().unwrap() = commands::load_server_url(app.handle());
+            *state.server_url.lock().unwrap() = saved_url.clone();
+            if let Some(url) = saved_url {
+                commands::grant_remote_ipc(app.handle(), &url);
+            }
 
             setup_tray(app.handle())?;
             Ok(())

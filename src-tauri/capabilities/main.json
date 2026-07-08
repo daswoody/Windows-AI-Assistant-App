@@ -1,21 +1,22 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
-  "description": "IPC-Rechte fuer die gebuendelte Bootstrap-Seite UND die vom eigenen Orchestrator geladene Remote-UI (https://<server>/app). Remote-Zugriff ist eine bewusste Entscheidung: der Server ist Teil des eigenen Heim-Setups (Spez 2.5, 'voll zentral'); die Shell exponiert ausschliesslich ihre eigenen Befehle.",
+  "description": "IPC-Rechte fuer die LOKALE Bootstrap-Seite. Die vom Orchestrator geladene Remote-UI (https://<server>/app) bekommt ihre Rechte zur Laufzeit ueber commands::grant_remote_ipc - mit exakter Server-Origin statt Wildcards (URLPattern-Wildcards ueberspannen keine Punkte im Hostnamen, https://* haette ai.preuss.app nie gematcht).",
   "windows": ["main", "indicator", "popup-*"],
-  "remote": {
-    "urls": ["http://*", "https://*"]
-  },
   "permissions": [
     "core:default",
-    "core:event:default",
-    "core:window:default",
-    "core:webview:default",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister",
-    "global-shortcut:allow-unregister-all",
-    "autostart:allow-enable",
-    "autostart:allow-disable",
-    "autostart:allow-is-enabled"
+    "allow-get-shell-info",
+    "allow-get-server-url",
+    "allow-set-server-url",
+    "allow-show-main-window",
+    "allow-set-indicator",
+    "allow-popup-card",
+    "allow-get-popup-payload",
+    "allow-pin-popup",
+    "allow-close-popup",
+    "allow-capture-screenshot",
+    "allow-set-hotkeys",
+    "allow-set-autostart",
+    "allow-set-wake-word"
   ]
 }

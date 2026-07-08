@@ -177,6 +177,162 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "Enables the capture_screenshot command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-capture-screenshot",
+          "markdownDescription": "Enables the capture_screenshot command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the close_popup command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-close-popup",
+          "markdownDescription": "Enables the close_popup command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_popup_payload command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-popup-payload",
+          "markdownDescription": "Enables the get_popup_payload command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-server-url",
+          "markdownDescription": "Enables the get_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_shell_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-shell-info",
+          "markdownDescription": "Enables the get_shell_info command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pin_popup command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pin-popup",
+          "markdownDescription": "Enables the pin_popup command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the popup_card command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-popup-card",
+          "markdownDescription": "Enables the popup_card command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_autostart command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-autostart",
+          "markdownDescription": "Enables the set_autostart command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_hotkeys command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-hotkeys",
+          "markdownDescription": "Enables the set_hotkeys command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_indicator command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-indicator",
+          "markdownDescription": "Enables the set_indicator command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-server-url",
+          "markdownDescription": "Enables the set_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_wake_word command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-wake-word",
+          "markdownDescription": "Enables the set_wake_word command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the show_main_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-show-main-window",
+          "markdownDescription": "Enables the show_main_window command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the capture_screenshot command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-capture-screenshot",
+          "markdownDescription": "Denies the capture_screenshot command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the close_popup command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-close-popup",
+          "markdownDescription": "Denies the close_popup command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_popup_payload command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-popup-payload",
+          "markdownDescription": "Denies the get_popup_payload command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-server-url",
+          "markdownDescription": "Denies the get_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_shell_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-shell-info",
+          "markdownDescription": "Denies the get_shell_info command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pin_popup command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pin-popup",
+          "markdownDescription": "Denies the pin_popup command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the popup_card command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-popup-card",
+          "markdownDescription": "Denies the popup_card command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_autostart command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-autostart",
+          "markdownDescription": "Denies the set_autostart command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_hotkeys command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-hotkeys",
+          "markdownDescription": "Denies the set_hotkeys command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_indicator command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-indicator",
+          "markdownDescription": "Denies the set_indicator command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-server-url",
+          "markdownDescription": "Denies the set_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_wake_word command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-wake-word",
+          "markdownDescription": "Denies the set_wake_word command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the show_main_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-show-main-window",
+          "markdownDescription": "Denies the show_main_window command without any pre-configured scope."
+        },
+        {
           "description": "This permission set configures if your\napplication can enable or disable auto\nstarting the application on boot.\n\n#### Granted Permissions\n\nIt allows all to check, enable and\ndisable the automatic start on boot.\n\n\n#### This default permission set includes:\n\n- `allow-enable`\n- `allow-disable`\n- `allow-is-enabled`",
           "type": "string",
           "const": "autostart:default",

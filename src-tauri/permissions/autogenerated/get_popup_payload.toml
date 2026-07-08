@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-popup-payload"
+description = "Enables the get_popup_payload command without any pre-configured scope."
+commands.allow = ["get_popup_payload"]
+
+[[permission]]
+identifier = "deny-get-popup-payload"
+description = "Denies the get_popup_payload command without any pre-configured scope."
+commands.deny = ["get_popup_payload"]

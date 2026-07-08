@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pin-popup"
+description = "Enables the pin_popup command without any pre-configured scope."
+commands.allow = ["pin_popup"]
+
+[[permission]]
+identifier = "deny-pin-popup"
+description = "Denies the pin_popup command without any pre-configured scope."
+commands.deny = ["pin_popup"]

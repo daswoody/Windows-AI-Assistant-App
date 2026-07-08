@@ -40,6 +40,51 @@ pub fn load_server_url(app: &AppHandle) -> Option<String> {
     value["server_url"].as_str().map(str::to_string)
 }
 
+/// Gibt der vom Server geladenen UI (Remote-Origin!) Zugriff auf die
+/// Shell-Befehle. Tauri blockt Remote-IPC komplett, bis eine Capability
+/// mit passender Origin UND den Command-Permissions existiert - wir
+/// registrieren sie zur Laufzeit mit der EXAKTEN Origin des verbundenen
+/// Servers (kein Wildcard-Raten, minimale Angriffsflaeche).
+pub fn grant_remote_ipc(app: &AppHandle, server_url: &str) {
+    let Ok(parsed) = tauri::Url::parse(server_url) else {
+        return;
+    };
+    let origin = parsed.origin().ascii_serialization();
+
+    let state = app.state::<crate::AppState>();
+    let mut granted = state.granted_origins.lock().unwrap();
+    if !granted.insert(origin.clone()) {
+        return; // schon registriert (Capability-IDs muessen eindeutig sein)
+    }
+
+    let mut capability = tauri::ipc::CapabilityBuilder::new(format!("remote-ui-{origin}"))
+        .local(false)
+        .remote(origin.clone())
+        .windows(["main", "indicator", "popup-*"])
+        .permission("core:default");
+    for permission in [
+        "allow-get-shell-info",
+        "allow-get-server-url",
+        "allow-set-server-url",
+        "allow-show-main-window",
+        "allow-set-indicator",
+        "allow-popup-card",
+        "allow-get-popup-payload",
+        "allow-pin-popup",
+        "allow-close-popup",
+        "allow-capture-screenshot",
+        "allow-set-hotkeys",
+        "allow-set-autostart",
+        "allow-set-wake-word",
+    ] {
+        capability = capability.permission(permission);
+    }
+
+    if let Err(error) = app.add_capability(capability) {
+        eprintln!("Remote-IPC-Freigabe fuer {origin} fehlgeschlagen: {error}");
+    }
+}
+
 #[tauri::command]
 pub fn get_server_url(state: State<AppState>) -> Option<String> {
     state.server_url.lock().unwrap().clone()
@@ -60,6 +105,10 @@ pub fn set_server_url(app: AppHandle, state: State<AppState>, url: String) -> Re
         let _ = fs::write(&path, serde_json::json!({ "server_url": url }).to_string());
     }
 
+    // WICHTIG: Remote-IPC freigeben, BEVOR das Fenster auf die Server-UI
+    // navigiert - sonst laufen deren invoke-Aufrufe (Hotkeys, Screenshot,
+    // Indikator, ...) in die ACL-Ablehnung.
+    grant_remote_ipc(&app, &url);
     windows::navigate_main_to_app(&app, &url)
 }
 
