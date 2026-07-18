@@ -12,10 +12,13 @@
 //! Mikrofonpegel eine Schwelle uebersteigt (+ Nachlauf); ein Pre-Roll-
 //! Puffer schiebt den (oft leisen) Wortanfang nach.
 //!
-//! Modelle liegen in %APPDATA%/de.heimai.windows/openwakeword/:
-//!   melspectrogram.onnx, embedding_model.onnx und GENAU EIN weiteres
-//!   .onnx-Modell (das Wake Word, z. B. hey_jarvis_v0.1.onnx von
-//!   https://github.com/dscripka/openWakeWord).
+//! Modelle: Die App bringt melspectrogram.onnx, embedding_model.onnx und
+//! drei Wake-Word-Modelle (hey_jarvis/alexa/hey_mycroft, openWakeWord
+//! v0.5.1, Apache-2.0) als Bundle-Ressourcen mit - der CI-Build laedt sie
+//! ins Installationspaket, es ist KEIN manuelles Setup noetig. Eigene
+//! Modelle koennen zusaetzlich nach %APPDATA%/de.heimai.windows/openwakeword/
+//! gelegt werden (Nutzer-Ordner gewinnt bei Namensgleichheit; Auswahl
+//! "custom" nimmt das erste eigene .onnx von dort).
 
 use std::collections::VecDeque;
 use std::path::PathBuf;
@@ -51,13 +54,8 @@ impl WakeWordHandle {
     }
 }
 
-pub fn start(app: AppHandle, threshold: f32) -> Result<WakeWordHandle, String> {
-    let models_dir = app
-        .path()
-        .app_config_dir()
-        .map_err(|e| e.to_string())?
-        .join("openwakeword");
-    let (mel_path, emb_path, ww_path) = find_models(&models_dir)?;
+pub fn start(app: AppHandle, threshold: f32, model: Option<String>) -> Result<WakeWordHandle, String> {
+    let (mel_path, emb_path, ww_path) = find_models(&app, model.as_deref())?;
 
     let stop = Arc::new(AtomicBool::new(false));
     let stop_thread = stop.clone();
@@ -74,26 +72,80 @@ pub fn start(app: AppHandle, threshold: f32) -> Result<WakeWordHandle, String> {
     Ok(WakeWordHandle { stop })
 }
 
-fn find_models(dir: &PathBuf) -> Result<(PathBuf, PathBuf, PathBuf), String> {
-    let mel = dir.join("melspectrogram.onnx");
-    let emb = dir.join("embedding_model.onnx");
-    if !mel.is_file() || !emb.is_file() {
-        return Err(format!(
-            "openWakeWord-Modelle fehlen: bitte melspectrogram.onnx, embedding_model.onnx \
-             und ein Wake-Word-Modell nach {} legen",
-            dir.display()
-        ));
+const BASE_MODELS: [&str; 2] = ["melspectrogram.onnx", "embedding_model.onnx"];
+const DEFAULT_WAKE_MODEL: &str = "hey_jarvis";
+
+/// Suchreihenfolge: Nutzer-Ordner (%APPDATA%/.../openwakeword, fuer eigene
+/// Modelle) vor den mitgelieferten Bundle-Ressourcen.
+fn model_dirs(app: &AppHandle) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    if let Ok(dir) = app.path().app_config_dir() {
+        dirs.push(dir.join("openwakeword"));
     }
-    let wake = std::fs::read_dir(dir)
-        .map_err(|e| e.to_string())?
-        .flatten()
-        .map(|entry| entry.path())
-        .find(|path| {
-            path.extension().is_some_and(|ext| ext == "onnx")
-                && path.file_name() != mel.file_name()
-                && path.file_name() != emb.file_name()
-        })
-        .ok_or_else(|| format!("kein Wake-Word-Modell (*.onnx) in {}", dir.display()))?;
+    if let Ok(dir) = app.path().resource_dir() {
+        dirs.push(dir.join("openwakeword"));
+    }
+    dirs
+}
+
+fn find_in_dirs(dirs: &[PathBuf], name: &str) -> Option<PathBuf> {
+    dirs.iter().map(|dir| dir.join(name)).find(|path| path.is_file())
+}
+
+fn find_models(app: &AppHandle, wanted: Option<&str>) -> Result<(PathBuf, PathBuf, PathBuf), String> {
+    let dirs = model_dirs(app);
+    let mel = find_in_dirs(&dirs, "melspectrogram.onnx")
+        .ok_or("melspectrogram.onnx fehlt (Bundle beschaedigt?)")?;
+    let emb = find_in_dirs(&dirs, "embedding_model.onnx")
+        .ok_or("embedding_model.onnx fehlt (Bundle beschaedigt?)")?;
+
+    let wanted = match wanted {
+        Some(value) if !value.trim().is_empty() => value,
+        _ => DEFAULT_WAKE_MODEL,
+    };
+
+    let wake = if wanted == "custom" {
+        // Erstes eigenes .onnx im NUTZER-Ordner (nicht die Basis-Modelle).
+        let user_dir = dirs.first().cloned().ok_or("kein Konfig-Verzeichnis")?;
+        std::fs::read_dir(&user_dir)
+            .ok()
+            .into_iter()
+            .flatten()
+            .flatten()
+            .map(|entry| entry.path())
+            .find(|path| {
+                path.extension().is_some_and(|ext| ext == "onnx")
+                    && path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .is_some_and(|n| !BASE_MODELS.contains(&n))
+            })
+            .ok_or_else(|| {
+                format!(
+                    "Kein eigenes Wake-Word-Modell (*.onnx) in {} gefunden",
+                    user_dir.display()
+                )
+            })?
+    } else {
+        // Eingebautes Modell: Datei, die mit dem Namen beginnt
+        // (hey_jarvis -> hey_jarvis_v0.1.onnx); Nutzer-Ordner gewinnt.
+        dirs.iter()
+            .find_map(|dir| {
+                std::fs::read_dir(dir).ok().and_then(|entries| {
+                    entries
+                        .flatten()
+                        .map(|entry| entry.path())
+                        .find(|path| {
+                            path.extension().is_some_and(|ext| ext == "onnx")
+                                && path
+                                    .file_name()
+                                    .and_then(|n| n.to_str())
+                                    .is_some_and(|n| n.starts_with(wanted))
+                        })
+                })
+            })
+            .ok_or_else(|| format!("Wake-Word-Modell '{wanted}' nicht gefunden"))?
+    };
     Ok((mel, emb, wake))
 }
 

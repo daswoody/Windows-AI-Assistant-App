@@ -39,19 +39,26 @@ Shell, bleibt die App auf der Bootstrap-Seite und bittet um ein Update.
    `/app/version.json`, speichert die Adresse und lädt die UI.
 3. Anmelden wie in der Android-App (`/v1/auth/login`).
 
-## Wake Word einrichten
+## Wake Word
 
-Die Shell erwartet die openWakeWord-Modelle (ONNX) unter
-`%APPDATA%\de.heimai.windows\openwakeword\`:
+**Kein Setup nötig** — die openWakeWord-Modelle (Apache-2.0, von
+<https://github.com/dscripka/openWakeWord>, v0.5.1) sind im Installer
+enthalten: die Basis-Pipeline (`melspectrogram.onnx`,
+`embedding_model.onnx`) plus drei Wake Words zur Auswahl in den
+App-Einstellungen:
 
-- `melspectrogram.onnx` und `embedding_model.onnx` (gemeinsame Basis)
-- genau **ein** weiteres `.onnx` = das Wake-Word-Modell
-  (z. B. `hey_jarvis_v0.1.onnx`)
+- **„Hey Jarvis"** (Standard)
+- **„Alexa"**
+- **„Hey Mycroft"**
 
-Quelle: <https://github.com/dscripka/openWakeWord> (Releases bzw.
-`openwakeword/resources/models`). Danach in den App-Einstellungen
-„Wake Word aktiv" einschalten. Erkennung → Assist-Modus: einmal zuhören,
-antworten (Sprachantwort + ggf. Karte als Popup), fertig.
+Einfach in den Einstellungen „Wake Word aktiv" einschalten und das Wort
+wählen. Erkennung → Assist-Modus: einmal zuhören, antworten
+(Sprachantwort + ggf. Karte als Popup), fertig.
+
+**Eigene Modelle** (z. B. eine selbst trainierte Phrase): `.onnx`-Datei
+nach `%APPDATA%\de.heimai.windows\openwakeword\` legen und in den
+Einstellungen „Eigenes Modell" wählen. Der Nutzer-Ordner gewinnt auch bei
+Namensgleichheit mit den mitgelieferten Modellen (Update-Möglichkeit).
 
 ## Build
 

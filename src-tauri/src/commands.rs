@@ -189,15 +189,16 @@ pub fn set_wake_word(
     state: State<AppState>,
     enabled: bool,
     threshold: f32,
+    model: Option<String>,
 ) -> Result<(), String> {
     let mut slot = state.wakeword.lock().unwrap();
     // Bestehende Engine immer stoppen; bei enabled danach neu starten
-    // (deckt auch Threshold-Aenderungen ab).
+    // (deckt auch Threshold-/Modell-Aenderungen ab).
     if let Some(handle) = slot.take() {
         handle.stop();
     }
     if enabled {
-        *slot = Some(wakeword::start(app, threshold)?);
+        *slot = Some(wakeword::start(app, threshold, model)?);
     }
     Ok(())
 }

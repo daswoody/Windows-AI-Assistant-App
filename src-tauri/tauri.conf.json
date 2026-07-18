@@ -31,6 +31,9 @@
       "icons/128x128.png",
       "icons/icon.ico"
     ],
+    "resources": {
+      "resources/openwakeword/*": "openwakeword/"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser",

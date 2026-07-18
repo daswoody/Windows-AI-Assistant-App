@@ -22,6 +22,23 @@ jobs:
       - name: Tauri CLI installieren
         run: npm install -g @tauri-apps/cli@^2
 
+      # openWakeWord-Modelle (Apache-2.0) in den Installer einbetten:
+      # Basis-Pipeline + drei Wake Words. Damit funktioniert das Wake Word
+      # direkt nach der Installation - kein manuelles Modell-Setup.
+      - name: openWakeWord-Modelle einbetten
+        shell: pwsh
+        run: |
+          $base = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1"
+          $dir = "src-tauri/resources/openwakeword"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          foreach ($f in @("melspectrogram.onnx", "embedding_model.onnx",
+                           "hey_jarvis_v0.1.onnx", "alexa_v0.1.onnx", "hey_mycroft_v0.1.onnx")) {
+            Invoke-WebRequest -Uri "$base/$f" -OutFile "$dir/$f"
+            $size = (Get-Item "$dir/$f").Length
+            if ($size -lt 150000) { throw "$f unvollstaendig ($size Bytes)" }
+            Write-Host "$f -> $size Bytes"
+          }
+
       - name: App bauen (NSIS-Installer)
         run: tauri build
         env:

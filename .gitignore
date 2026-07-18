@@ -1,2 +1,5 @@
 # Rust / Tauri
 src-tauri/target/
+# openWakeWord-Modelle: laedt der CI-Build (bzw. lokal von
+# github.com/dscripka/openWakeWord v0.5.1) - nicht einchecken
+src-tauri/resources/openwakeword/*.onnx
